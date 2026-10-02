@@ -12,7 +12,11 @@ from database.models import (
     Equipment,
 )
 
-from analytics.performance import calculate_performance_scores
+from analytics.performance import (
+    calculate_performance_scores,
+    get_workload_vs_performance,
+)
+
 from analytics.training import get_training_statistics
 from analytics.injury import get_injury_statistics
 from analytics.matches import get_match_list
@@ -34,6 +38,7 @@ st.set_page_config(
 # --------------------------------------------------
 
 def get_dashboard_statistics():
+    """Get high-level statistics for the dashboard."""
 
     session = SessionLocal()
 
@@ -76,6 +81,7 @@ def get_dashboard_statistics():
         }
 
     finally:
+
         session.close()
 
 
@@ -138,12 +144,14 @@ st.subheader("Squad Overview")
 
 col1, col2, col3, col4 = st.columns(4)
 
+
 with col1:
 
     st.metric(
         "Players",
         stats["players"],
     )
+
 
 with col2:
 
@@ -152,12 +160,14 @@ with col2:
         stats["teams"],
     )
 
+
 with col3:
 
     st.metric(
         "Matches",
         stats["matches"],
     )
+
 
 with col4:
 
@@ -169,12 +179,14 @@ with col4:
 
 col1, col2, col3, col4 = st.columns(4)
 
+
 with col1:
 
     st.metric(
         "Active Injuries",
         stats["active_injuries"],
     )
+
 
 with col2:
 
@@ -183,12 +195,14 @@ with col2:
         stats["training_sessions"],
     )
 
+
 with col3:
 
     st.metric(
         "Equipment",
         stats["equipment"],
     )
+
 
 with col4:
 
@@ -215,7 +229,7 @@ st.divider()
 
 
 # --------------------------------------------------
-# PERFORMANCE SECTION
+# PLAYER PERFORMANCE
 # --------------------------------------------------
 
 st.subheader("📊 Player Performance")
@@ -258,7 +272,9 @@ if not performance_df.empty:
 
 else:
 
-    st.info("No performance data available.")
+    st.info(
+        "No performance data available."
+    )
 
 
 st.divider()
@@ -323,14 +339,16 @@ if not performance_df.empty:
 
 else:
 
-    st.info("No performance data available.")
+    st.info(
+        "No performance data available."
+    )
 
 
 st.divider()
 
 
 # --------------------------------------------------
-# TRAINING SECTION
+# TRAINING WORKLOAD
 # --------------------------------------------------
 
 st.subheader("🏋️ Training Workload")
@@ -372,14 +390,79 @@ if not training_df.empty:
 
 else:
 
-    st.info("No training data available.")
+    st.info(
+        "No training data available."
+    )
 
 
 st.divider()
 
 
 # --------------------------------------------------
-# AVAILABILITY SECTION
+# WORKLOAD VS PERFORMANCE
+# --------------------------------------------------
+
+st.subheader(
+    "🏋️ Training Workload vs Performance"
+)
+
+workload_data = get_workload_vs_performance()
+
+if workload_data:
+
+    workload_performance_df = pd.DataFrame(
+        workload_data
+    )
+
+    fig_workload_performance = px.scatter(
+        workload_performance_df,
+        x="average_workload",
+        y="performance_score",
+        size="data_confidence",
+        color="role",
+        hover_name="player_name",
+        hover_data={
+            "average_workload": ":.1f",
+            "performance_score": ":.2f",
+            "average_fitness": ":.1f",
+            "attendance_percentage": ":.1f",
+            "data_confidence": ":.1f",
+            "role": True,
+            "workload_status": True,
+        },
+        labels={
+            "average_workload": "Average Training Workload",
+            "performance_score": "Performance Score",
+            "average_fitness": "Average Fitness",
+            "attendance_percentage": "Attendance",
+            "data_confidence": "Data Confidence",
+            "role": "Role",
+            "workload_status": "Workload Status",
+        },
+        title="Training Workload vs Player Performance",
+    )
+
+    fig_workload_performance.update_layout(
+        height=500,
+    )
+
+    st.plotly_chart(
+        fig_workload_performance,
+        width="stretch",
+    )
+
+else:
+
+    st.info(
+        "No workload or performance data available."
+    )
+
+
+st.divider()
+
+
+# --------------------------------------------------
+# PLAYER AVAILABILITY
 # --------------------------------------------------
 
 st.subheader("🩹 Player Availability")
@@ -416,7 +499,9 @@ if not injury_df.empty:
 
 else:
 
-    st.info("No injury data available.")
+    st.info(
+        "No injury data available."
+    )
 
 
 st.divider()
@@ -463,7 +548,9 @@ if not match_df.empty:
 
 else:
 
-    st.info("No match data available.")
+    st.info(
+        "No match data available."
+    )
 
 
 st.divider()
@@ -473,7 +560,9 @@ st.divider()
 # TOP PERFORMERS TABLE
 # --------------------------------------------------
 
-st.subheader("⭐ Player Performance Summary")
+st.subheader(
+    "⭐ Player Performance Summary"
+)
 
 if not performance_df.empty:
 
@@ -506,6 +595,12 @@ if not performance_df.empty:
         width="stretch",
     )
 
+else:
+
+    st.info(
+        "No player performance data available."
+    )
+
 
 st.divider()
 
@@ -518,11 +613,13 @@ st.subheader("System Status")
 
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
 
     st.success(
         "Database Connected"
     )
+
 
 with col2:
 
@@ -530,12 +627,20 @@ with col2:
         "Analytics Engine Active"
     )
 
+
 with col3:
 
     st.success(
         "Streamlit Application Active"
     )
 
+
+st.divider()
+
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
 
 st.caption(
     "Cricket Sports Performance & Operations Intelligence Platform"

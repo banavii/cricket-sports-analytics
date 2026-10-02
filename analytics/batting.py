@@ -137,7 +137,67 @@ def get_batting_statistics():
     finally:
         session.close()
 
+def get_batting_trend(player_id):
+    """
+    Get match-by-match batting performance for a player.
 
+    Args:
+        player_id (int): ID of the player.
+
+    Returns:
+        list[dict]: Match-level batting performance.
+    """
+
+    session = SessionLocal()
+
+    try:
+        results = (
+            session.query(
+                BattingPerformance.match_id,
+                BattingPerformance.runs,
+                BattingPerformance.balls,
+                BattingPerformance.fours,
+                BattingPerformance.sixes,
+            )
+            .filter(
+                BattingPerformance.player_id == player_id
+            )
+            .order_by(
+                BattingPerformance.match_id
+            )
+            .all()
+        )
+
+        trend = []
+
+        for row in results:
+
+            runs = row.runs or 0
+            balls = row.balls or 0
+
+            if balls > 0:
+                strike_rate = (runs / balls) * 100
+            else:
+                strike_rate = 0
+
+            trend.append(
+                {
+                    "match_id": row.match_id,
+                    "runs": runs,
+                    "balls": balls,
+                    "fours": row.fours or 0,
+                    "sixes": row.sixes or 0,
+                    "strike_rate": round(
+                        strike_rate,
+                        2,
+                    ),
+                }
+            )
+
+        return trend
+
+    finally:
+        session.close()
 if __name__ == "__main__":
 
     statistics = get_batting_statistics()

@@ -4,6 +4,8 @@ from database.connection import SessionLocal
 from database.models import Player, Team
 
 from analytics.player_profile import get_player_profile
+from analytics.batting import get_batting_trend
+from analytics.bowling import get_bowling_trend
 
 
 st.set_page_config(
@@ -379,7 +381,147 @@ else:
 
     st.info("No bowling data available.")
 
+# --------------------------------------------------
+# PERFORMANCE TRENDS
+# --------------------------------------------------
 
+st.divider()
+
+st.subheader("📈 Performance Trends")
+
+
+# --------------------------------------------------
+# BATTING TREND
+# --------------------------------------------------
+
+if batting:
+
+    batting_trend = get_batting_trend(
+        selected_player_id
+    )
+
+    if batting_trend:
+
+        st.markdown("### 🏏 Batting Trend")
+
+        import pandas as pd
+        import plotly.graph_objects as go
+
+        batting_df = pd.DataFrame(
+            batting_trend
+        )
+
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Scatter(
+                x=batting_df["match_id"],
+                y=batting_df["runs"],
+                mode="lines+markers",
+                name="Runs",
+            )
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=batting_df["match_id"],
+                y=batting_df["strike_rate"],
+                mode="lines+markers",
+                name="Strike Rate",
+                yaxis="y2",
+            )
+        )
+
+        fig.update_layout(
+            title="Batting Performance by Match",
+            xaxis_title="Match",
+            yaxis=dict(
+                title="Runs",
+            ),
+            yaxis2=dict(
+                title="Strike Rate",
+                overlaying="y",
+                side="right",
+            ),
+            hovermode="x unified",
+            height=450,
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+        )
+
+    else:
+
+        st.info(
+            "No batting trend data available."
+        )
+
+
+# --------------------------------------------------
+# BOWLING TREND
+# --------------------------------------------------
+
+if bowling:
+
+    bowling_trend = get_bowling_trend(
+        selected_player_id
+    )
+
+    if bowling_trend:
+
+        st.markdown("### 🎯 Bowling Trend")
+
+        bowling_df = pd.DataFrame(
+            bowling_trend
+        )
+
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Bar(
+                x=bowling_df["match_id"],
+                y=bowling_df["wickets"],
+                name="Wickets",
+            )
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=bowling_df["match_id"],
+                y=bowling_df["economy_rate"],
+                mode="lines+markers",
+                name="Economy Rate",
+                yaxis="y2",
+            )
+        )
+
+        fig.update_layout(
+            title="Bowling Performance by Match",
+            xaxis_title="Match",
+            yaxis=dict(
+                title="Wickets",
+            ),
+            yaxis2=dict(
+                title="Economy Rate",
+                overlaying="y",
+                side="right",
+            ),
+            hovermode="x unified",
+            height=450,
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+        )
+
+    else:
+
+        st.info(
+            "No bowling trend data available."
+        )
 # --------------------------------------------------
 # TRAINING
 # --------------------------------------------------

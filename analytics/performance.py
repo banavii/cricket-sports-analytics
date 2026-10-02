@@ -1,6 +1,9 @@
 from analytics.batting import get_batting_statistics
 from analytics.bowling import get_bowling_statistics
-from analytics.training import get_training_statistics
+from analytics.training import (
+    get_training_statistics,
+    get_training_status,
+)
 
 from database.connection import SessionLocal
 from database.models import Player
@@ -83,7 +86,10 @@ def calculate_data_confidence(
             / 2
         )
 
-        return round(combined * 100, 2)
+        return round(
+            combined * 100,
+            2,
+        )
 
     return 25
 
@@ -122,6 +128,7 @@ def calculate_performance_scores():
     session = SessionLocal()
 
     try:
+
         players = session.query(Player).all()
 
         player_roles = {
@@ -135,6 +142,7 @@ def calculate_performance_scores():
         }
 
     finally:
+
         session.close()
 
     results = []
@@ -360,12 +368,15 @@ def calculate_performance_scores():
         # --------------------------------------------------
 
         if confidence >= 75:
+
             confidence_label = "High"
 
         elif confidence >= 50:
+
             confidence_label = "Medium"
 
         else:
+
             confidence_label = "Low"
 
         results.append(
@@ -397,7 +408,10 @@ def calculate_performance_scores():
             }
         )
 
-    # Sort by performance score
+    # --------------------------------------------------
+    # SORT BY PERFORMANCE
+    # --------------------------------------------------
+
     results.sort(
         key=lambda player: player["performance_score"],
         reverse=True,
@@ -405,6 +419,95 @@ def calculate_performance_scores():
 
     return results
 
+
+def get_workload_vs_performance():
+    """
+    Combine training workload data with player performance
+    scores and workload status.
+
+    Returns:
+        list[dict]: Workload and performance information
+        for each player.
+    """
+
+    training_data = get_training_statistics()
+
+    training_status_data = get_training_status()
+
+    performance_data = calculate_performance_scores()
+
+    training = {
+        player["player_id"]: player
+        for player in training_data
+    }
+
+    training_status = {
+        player["player_id"]: player
+        for player in training_status_data
+    }
+
+    results = []
+
+    for player in performance_data:
+
+        player_id = player["player_id"]
+
+        training_stats = training.get(
+            player_id,
+            {},
+        )
+
+        status_stats = training_status.get(
+            player_id,
+            {},
+        )
+
+        results.append(
+            {
+                "player_id": player_id,
+                "player_name": player["player_name"],
+                "role": player["role"],
+
+                "average_workload": training_stats.get(
+                    "average_workload",
+                    0,
+                ),
+
+                "average_fitness": training_stats.get(
+                    "average_fitness",
+                    0,
+                ),
+
+                "attendance_percentage": training_stats.get(
+                    "attendance_percentage",
+                    0,
+                ),
+
+                "workload_status": status_stats.get(
+                    "workload_status",
+                    "Unknown",
+                ),
+
+                "performance_score": player[
+                    "performance_score"
+                ],
+
+                "data_confidence": player[
+                    "data_confidence"
+                ],
+
+                "confidence_label": player[
+                    "confidence_label"
+                ],
+            }
+        )
+
+    return results
+
+
+# --------------------------------------------------
+# TEST / MANUAL EXECUTION
+# --------------------------------------------------
 
 if __name__ == "__main__":
 

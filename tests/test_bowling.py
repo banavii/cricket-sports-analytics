@@ -1,5 +1,7 @@
-from analytics.bowling import get_bowling_statistics
-
+from analytics.bowling import (
+    get_bowling_statistics,
+    get_bowling_trend
+)
 
 def test_bowling_statistics_not_empty():
 
@@ -55,3 +57,15 @@ def test_karan_patel_bowling():
 
     assert karan["matches"] == 2
     assert karan["wickets"] == 3
+def test_bowling_trend():
+    trend = get_bowling_trend(3)
+
+    assert len(trend) == 3
+
+    assert trend[0]["match_id"] == 1
+    assert trend[0]["wickets"] == 3
+    assert trend[0]["economy_rate"] == 7.0
+
+    assert trend[2]["match_id"] == 3
+    assert trend[2]["wickets"] == 4
+    assert trend[2]["economy_rate"] == 6.25    

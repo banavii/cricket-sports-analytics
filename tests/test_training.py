@@ -1,5 +1,5 @@
 from analytics.training import get_training_statistics
-
+from analytics.training import get_training_status
 
 def test_training_statistics_not_empty():
 
@@ -58,3 +58,18 @@ def test_aarav_sharma_training():
     assert aarav["sessions_attended"] == 3
     assert aarav["sessions_missed"] == 0
     assert aarav["attendance_percentage"] == 100.0
+def test_training_status():
+    status = get_training_status()
+
+    assert len(status) > 0
+
+    for player in status:
+        assert player["workload_status"] in [
+            "Low",
+            "Moderate",
+            "High",
+        ]
+
+        assert player["average_workload"] >= 0
+        assert player["average_fitness"] >= 0
+        assert 0 <= player["attendance_percentage"] <= 100    

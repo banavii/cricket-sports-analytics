@@ -125,7 +125,71 @@ def get_bowling_statistics():
 
     finally:
         session.close()
+def get_bowling_trend(player_id):
+    """
+    Get match-by-match bowling performance for a player.
 
+    Args:
+        player_id (int): ID of the player.
+
+    Returns:
+        list[dict]: Match-level bowling performance.
+    """
+
+    session = SessionLocal()
+
+    try:
+        results = (
+            session.query(
+                BowlingPerformance.match_id,
+                BowlingPerformance.balls,
+                BowlingPerformance.runs_conceded,
+                BowlingPerformance.wickets,
+                BowlingPerformance.maidens,
+                BowlingPerformance.dot_balls,
+            )
+            .filter(
+                BowlingPerformance.player_id == player_id
+            )
+            .order_by(
+                BowlingPerformance.match_id
+            )
+            .all()
+        )
+
+        trend = []
+
+        for row in results:
+
+            balls = row.balls or 0
+            runs_conceded = row.runs_conceded or 0
+
+            if balls > 0:
+                economy_rate = (
+                    runs_conceded / balls
+                ) * 6
+            else:
+                economy_rate = 0
+
+            trend.append(
+                {
+                    "match_id": row.match_id,
+                    "balls": balls,
+                    "runs_conceded": runs_conceded,
+                    "wickets": row.wickets or 0,
+                    "maidens": row.maidens or 0,
+                    "dot_balls": row.dot_balls or 0,
+                    "economy_rate": round(
+                        economy_rate,
+                        2,
+                    ),
+                }
+            )
+
+        return trend
+
+    finally:
+        session.close()
 
 if __name__ == "__main__":
 

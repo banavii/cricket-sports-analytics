@@ -1,4 +1,7 @@
-from analytics.batting import get_batting_statistics
+from analytics.batting import (
+    get_batting_statistics,
+    get_batting_trend,
+)
 
 
 def test_batting_statistics_not_empty():
@@ -52,3 +55,20 @@ def test_aarav_sharma_batting():
     assert aarav["matches"] == 3
     assert aarav["total_runs"] == 187
     assert aarav["batting_average"] == 93.50
+def test_aarav_sharma_batting_trend():
+    data = get_batting_trend(1)
+
+    assert len(data) == 3
+
+    assert data[0]["match_id"] == 1
+    assert data[0]["runs"] == 72
+    assert data[0]["balls"] == 48
+    assert data[0]["strike_rate"] == 150.0
+
+    assert data[1]["match_id"] == 2
+    assert data[1]["runs"] == 31
+    assert data[1]["balls"] == 27
+
+    assert data[2]["match_id"] == 3
+    assert data[2]["runs"] == 84
+    assert data[2]["balls"] == 51    

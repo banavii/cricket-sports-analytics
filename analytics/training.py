@@ -103,7 +103,59 @@ def get_training_statistics():
     finally:
         session.close()
 
+def get_training_status():
+    """
+    Classify each player's training workload.
 
+    Workload status is determined relative to the average
+    workload of all players with training records.
+
+    Returns:
+        list[dict]: Player training workload and status.
+    """
+
+    statistics = get_training_statistics()
+
+    if not statistics:
+        return []
+
+    overall_average = (
+        sum(
+            player["average_workload"]
+            for player in statistics
+        )
+        / len(statistics)
+    )
+
+    results = []
+
+    for player in statistics:
+
+        workload = player["average_workload"]
+
+        if workload >= overall_average * 1.15:
+            workload_status = "High"
+
+        elif workload <= overall_average * 0.85:
+            workload_status = "Low"
+
+        else:
+            workload_status = "Moderate"
+
+        results.append(
+            {
+                "player_id": player["player_id"],
+                "player_name": player["player_name"],
+                "average_workload": workload,
+                "average_fitness": player["average_fitness"],
+                "attendance_percentage": player[
+                    "attendance_percentage"
+                ],
+                "workload_status": workload_status,
+            }
+        )
+
+    return results
 if __name__ == "__main__":
 
     statistics = get_training_statistics()
