@@ -279,6 +279,208 @@ else:
 
 st.divider()
 
+# ============================================================
+# PLAYER CONSISTENCY ANALYSIS
+# ============================================================
+
+st.subheader("Player Consistency Analysis")
+
+consistency_data = calculate_performance_scores()
+
+consistency_df = pd.DataFrame(
+    consistency_data
+)
+
+if not consistency_df.empty:
+
+    col1, col2 = st.columns(2)
+
+    # --------------------------------------------------------
+    # Batting Consistency
+    # --------------------------------------------------------
+
+    with col1:
+
+        st.markdown("### Batting Consistency")
+
+        batting_consistency_df = (
+            consistency_df[
+                consistency_df["batting_consistency"] > 0
+            ]
+            .sort_values(
+                "batting_consistency",
+                ascending=False,
+            )
+        )
+
+        if not batting_consistency_df.empty:
+
+            fig_batting_consistency = px.bar(
+                batting_consistency_df,
+                x="player_name",
+                y="batting_consistency",
+                text="batting_consistency",
+                hover_data={
+                    "player_name": True,
+                    "role": True,
+                    "batting_consistency": ":.2f",
+                    "performance_score": ":.2f",
+                    "data_confidence": ":.1f",
+                },
+                labels={
+                    "player_name": "Player",
+                    "batting_consistency": (
+                        "Batting Consistency"
+                    ),
+                    "performance_score": (
+                        "Performance Score"
+                    ),
+                    "data_confidence": (
+                        "Data Confidence"
+                    ),
+                    "role": "Role",
+                },
+            )
+
+            fig_batting_consistency.update_traces(
+                texttemplate="%{text:.2f}",
+                textposition="outside",
+            )
+
+            fig_batting_consistency.update_layout(
+                yaxis_title="Consistency Score",
+                xaxis_title="Player",
+                yaxis_range=[0, 100],
+            )
+
+            st.plotly_chart(
+                fig_batting_consistency,
+                use_container_width=True,
+            )
+
+        else:
+
+            st.info(
+                "No batting consistency data available."
+            )
+
+    # --------------------------------------------------------
+    # Bowling Consistency
+    # --------------------------------------------------------
+
+    with col2:
+
+        st.markdown("### Bowling Consistency")
+
+        bowling_consistency_df = (
+            consistency_df[
+                consistency_df["bowling_consistency"] > 0
+            ]
+            .sort_values(
+                "bowling_consistency",
+                ascending=False,
+            )
+        )
+
+        if not bowling_consistency_df.empty:
+
+            fig_bowling_consistency = px.bar(
+                bowling_consistency_df,
+                x="player_name",
+                y="bowling_consistency",
+                text="bowling_consistency",
+                hover_data={
+                    "player_name": True,
+                    "role": True,
+                    "bowling_consistency": ":.2f",
+                    "performance_score": ":.2f",
+                    "data_confidence": ":.1f",
+                },
+                labels={
+                    "player_name": "Player",
+                    "bowling_consistency": (
+                        "Bowling Consistency"
+                    ),
+                    "performance_score": (
+                        "Performance Score"
+                    ),
+                    "data_confidence": (
+                        "Data Confidence"
+                    ),
+                    "role": "Role",
+                },
+            )
+
+            fig_bowling_consistency.update_traces(
+                texttemplate="%{text:.2f}",
+                textposition="outside",
+            )
+
+            fig_bowling_consistency.update_layout(
+                yaxis_title="Consistency Score",
+                xaxis_title="Player",
+                yaxis_range=[0, 100],
+            )
+
+            st.plotly_chart(
+                fig_bowling_consistency,
+                use_container_width=True,
+            )
+
+        else:
+
+            st.info(
+                "No bowling consistency data available."
+            )
+
+    # --------------------------------------------------------
+    # Consistency Summary Table
+    # --------------------------------------------------------
+
+    st.markdown("### Consistency Summary")
+
+    consistency_table = consistency_df[
+        [
+            "player_name",
+            "role",
+            "performance_score",
+            "batting_consistency",
+            "bowling_consistency",
+            "data_confidence",
+        ]
+    ].copy()
+
+    consistency_table = consistency_table.rename(
+        columns={
+            "player_name": "Player",
+            "role": "Role",
+            "performance_score": (
+                "Performance Score"
+            ),
+            "batting_consistency": (
+                "Batting Consistency"
+            ),
+            "bowling_consistency": (
+                "Bowling Consistency"
+            ),
+            "data_confidence": (
+                "Data Confidence"
+            ),
+        }
+    )
+
+    st.dataframe(
+        consistency_table,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    st.caption(
+        "Consistency scores measure match-to-match "
+        "variation in batting and bowling performance. "
+        "They are descriptive project metrics and should "
+        "be interpreted together with data confidence."
+    )
 
 # --------------------------------------------------
 # PERFORMANCE + CONFIDENCE

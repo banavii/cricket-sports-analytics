@@ -72,3 +72,27 @@ def test_aarav_sharma_batting_trend():
     assert data[2]["match_id"] == 3
     assert data[2]["runs"] == 84
     assert data[2]["balls"] == 51    
+def test_batting_consistency():
+    from analytics.batting import get_batting_consistency
+
+    # Aarav has 3 batting matches
+    result = get_batting_consistency(1)
+
+    assert result["player_id"] == 1
+    assert result["matches"] == 3
+    assert result["average_runs"] == 62.33
+    assert result["average_strike_rate"] == 143.17
+    assert result["consistency_score"] == 74.49
+
+    # Kabir has only 1 batting match,
+    # so match-to-match consistency cannot be measured.
+    kabir = get_batting_consistency(4)
+
+    assert kabir["matches"] == 1
+    assert kabir["consistency_score"] == 0
+
+    # Aditya also has only 1 batting match.
+    aditya = get_batting_consistency(6)
+
+    assert aditya["matches"] == 1
+    assert aditya["consistency_score"] == 0

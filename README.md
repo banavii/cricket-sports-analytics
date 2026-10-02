@@ -2,7 +2,9 @@
 
 A data-driven cricket analytics and operations platform designed to help teams monitor player performance, training workload, injuries, match performance, and equipment management through an interactive Streamlit dashboard.
 
-The system combines **Python, SQL, SQLAlchemy, Pandas, NumPy, and Streamlit** to transform cricket performance and operational data into structured analytics and actionable insights.
+The system combines **Python, SQL, SQLAlchemy, Pandas, NumPy, Plotly, and Streamlit** to transform cricket performance and operational data into structured analytics and actionable insights.
+
+**Project Status:** Version 1 Completed ✅ | Version 2 In Progress 🚀
 
 ---
 
@@ -19,11 +21,16 @@ Coaches and team managers need to monitor:
 * Injuries and player availability
 * Match-level performance
 * Cricket equipment
-* Overall player performance and confidence
+* Overall player performance
+* Data confidence and consistency
 
 This project brings these areas together into a single analytics platform.
 
 The system uses a relational database as the central data layer and provides specialized Python analytics modules that feed an interactive Streamlit dashboard.
+
+Version 1 establishes the core database, analytics engine, player management, operational modules, dashboard, and automated testing framework.
+
+Version 2 continues development by expanding the platform toward more advanced cricket intelligence and data-driven performance analysis.
 
 ---
 
@@ -38,8 +45,11 @@ The main objectives of the platform are to:
 * Track cricket equipment and assignments
 * Calculate role-based player performance scores
 * Measure confidence in performance data based on sample size
+* Analyze match-to-match performance consistency
+* Provide player-specific performance insights
 * Provide an interactive analytics dashboard
 * Maintain automated tests for the analytics layer
+* Build a foundation for future advanced analytics and machine learning
 
 ---
 
@@ -56,8 +66,12 @@ Provides an integrated player profile containing:
 * Bowling statistics
 * Training metrics
 * Injury information
+* Availability status
 * Performance score
 * Data confidence
+* Batting consistency
+* Bowling consistency
+* Match-by-match performance trends
 
 ### 🏏 Batting Analytics
 
@@ -75,6 +89,8 @@ The batting analytics module calculates:
 * Fifties
 * Hundreds
 
+The platform also provides match-by-match batting trends and batting consistency analysis.
+
 ### 🎯 Bowling Analytics
 
 The bowling module calculates:
@@ -90,6 +106,8 @@ The bowling module calculates:
 * Bowling strike rate
 * Dot-ball percentage
 
+The platform also provides match-by-match bowling trends and bowling consistency analysis.
+
 ### 🏋️ Training Analytics
 
 Training performance is analyzed using:
@@ -101,8 +119,11 @@ Training performance is analyzed using:
 * Total workload
 * Average workload
 * Average fitness rating
+* Workload status
 
-This allows training participation and workload to be viewed alongside match performance.
+Training workload is classified relative to the overall squad workload to identify players with comparatively high, moderate, or low workload levels.
+
+This allows training participation and workload to be viewed alongside player performance.
 
 ### 🩹 Injury & Availability Analytics
 
@@ -116,6 +137,8 @@ The injury module provides:
 * Player availability status
 
 Players with active recovering injuries are identified as unavailable.
+
+The dashboard also provides an overview of current player availability across the squad.
 
 ### 🏆 Match Analytics
 
@@ -132,6 +155,9 @@ Match-level analysis includes:
 * Opponent score
 * Match batting performances
 * Match bowling performances
+* Match summaries
+
+This provides a structured view of team and player performance at match level.
 
 ### 🧤 Equipment Management
 
@@ -166,25 +192,19 @@ Different player roles use different weighting strategies.
 
 ### All-rounder
 
-```text
-Batting      → 35%
-Bowling      → 35%
-Training     → 30%
-```
+Batting → 35%
+Bowling → 35%
+Training → 30%
 
 ### Bowler
 
-```text
-Bowling      → 60%
-Training     → 40%
-```
+Bowling → 60%
+Training → 40%
 
 ### Batter / Wicketkeeper
 
-```text
-Batting      → 60%
-Training     → 40%
-```
+Batting → 60%
+Training → 40%
 
 The system also calculates **data confidence separately from performance score**.
 
@@ -194,17 +214,13 @@ This is important because a high performance score based on only a small number 
 
 ## 🧠 Data Confidence
 
-Data confidence is based on the amount of performance data available for a player.
+Data confidence represents the amount of performance data available to support a player's calculated performance assessment.
 
-For example, batting or bowling confidence increases as the number of recorded matches increases.
+Confidence increases as more recorded performances become available.
 
 The system therefore separates:
 
-```text
-Performance Score
-        +
-Data Confidence
-```
+**Performance Score + Data Confidence**
 
 rather than combining them into a single metric.
 
@@ -215,33 +231,65 @@ This allows the dashboard to distinguish between:
 * Lower performance with strong evidence
 * Limited data requiring further observation
 
+Data confidence is intended to describe the **strength of the available data sample**, not the quality or ability of the player.
+
+---
+
+## 📈 Performance Consistency
+
+The platform also measures match-to-match performance consistency.
+
+Consistency analysis examines variation in player performance across available matches.
+
+### Batting Consistency
+
+The batting consistency analysis considers:
+
+* Runs
+* Strike rate
+* Match-to-match variation
+
+### Bowling Consistency
+
+The bowling consistency analysis considers:
+
+* Wickets
+* Economy rate
+* Match-to-match variation
+
+A consistency score is calculated when sufficient performance records are available.
+
+Players with limited match records receive a lower data-confidence context rather than being treated as equally representative of long-term performance.
+
+Consistency is presented as an additional descriptive metric and does not directly modify the overall performance score.
+
 ---
 
 ## 🏗️ System Architecture
 
-```text
-                    Streamlit Dashboard
-                           │
-                           ▼
-                    Python Services
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-     Player Analytics   Match Analytics   Operations
-          │                │                │
-          ├── Batting      ├── Matches     ├── Training
-          ├── Bowling      └── Performance ├── Injury
-          └── Profile                       └── Equipment
-                           │
-                           ▼
-                    SQLAlchemy ORM
-                           │
-                           ▼
-                      SQLite DB
-                           │
-                           ▼
-                  Cricket Data Models
-```
+Streamlit Dashboard
+↓
+Python Analytics
+↓
+Player Analytics | Match Analytics | Operations
+↓
+Batting | Bowling | Matches | Performance | Training | Injury | Equipment
+↓
+SQLAlchemy ORM
+↓
+SQLite Database
+↓
+Cricket Data Models
+
+The architecture separates the application into:
+
+* Presentation layer
+* Analytics layer
+* Database layer
+* Data models
+* Automated testing layer
+
+This modular structure allows additional analytics and data sources to be added without redesigning the complete application.
 
 ---
 
@@ -249,26 +297,20 @@ This allows the dashboard to distinguish between:
 
 The project uses a relational database with the following major entities:
 
-```text
 Teams
-  │
-  └── Players
-        │
-        ├── Batting Performances
-        ├── Bowling Performances
-        ├── Training Records
-        ├── Injuries
-        └── Equipment
+└── Players
+├── Batting Performances
+├── Bowling Performances
+├── Training Records
+├── Injuries
+└── Equipment
 
 Matches
-  │
-  ├── Batting Performances
-  └── Bowling Performances
+├── Batting Performances
+└── Bowling Performances
 
 Training Sessions
-  │
-  └── Training Records
-```
+└── Training Records
 
 ### Database Tables
 
@@ -292,11 +334,10 @@ SQLAlchemy provides the ORM layer between Python and the database.
 
 ## 📁 Project Structure
 
-```text
 cricket-sports-analytics/
-│
+
 ├── analytics/
-│   ├── __init__.py
+│   ├── **init**.py
 │   ├── batting.py
 │   ├── bowling.py
 │   ├── equipment.py
@@ -307,7 +348,7 @@ cricket-sports-analytics/
 │   └── training.py
 │
 ├── database/
-│   ├── __init__.py
+│   ├── **init**.py
 │   ├── connection.py
 │   ├── init_db.py
 │   ├── models.py
@@ -321,7 +362,7 @@ cricket-sports-analytics/
 │   └── training.py
 │
 ├── tests/
-│   ├── __init__.py
+│   ├── **init**.py
 │   ├── test_batting.py
 │   ├── test_bowling.py
 │   ├── test_equipment.py
@@ -337,7 +378,6 @@ cricket-sports-analytics/
 ├── README.md
 ├── requirements.txt
 └── .gitignore
-```
 
 > The SQLite database is ignored by Git and is generated locally from the database setup and seed scripts.
 
@@ -379,24 +419,24 @@ cricket-sports-analytics/
 
 The analytics layer is covered by automated tests using `pytest`.
 
-Current test coverage includes:
+The current test suite contains **36 tests**.
+
+### Test Distribution
 
 | Module      |  Tests |
 | ----------- | -----: |
-| Batting     |      4 |
-| Bowling     |      4 |
+| Batting     |      6 |
+| Bowling     |      6 |
 | Equipment   |      5 |
 | Injury      |      4 |
 | Matches     |      5 |
-| Performance |      4 |
-| Training    |      4 |
-| **Total**   | **30** |
+| Performance |      5 |
+| Training    |      5 |
+| **Total**   | **36** |
 
 Current result:
 
-```text
-30 passed
-```
+**36 passed**
 
 The tests validate:
 
@@ -405,16 +445,21 @@ The tests validate:
 * Valid numerical ranges
 * Player-specific calculations
 * Match-level calculations
+* Batting statistics
+* Bowling statistics
+* Batting consistency
+* Bowling consistency
+* Training metrics
+* Training workload classification
 * Equipment statistics
 * Performance scoring
+* Data confidence
 * Injury statistics
-* Training metrics
+* Player profile calculations
 
 Run the complete test suite with:
 
-```bash
-python -m pytest -v
-```
+`python -m pytest -v`
 
 ---
 
@@ -422,31 +467,25 @@ python -m pytest -v
 
 ### 1. Clone the repository
 
-```bash
-git clone https://github.com/banavii/cricket-sports-analytics.git
-cd cricket-sports-analytics
-```
+`git clone https://github.com/banavii/cricket-sports-analytics.git`
+
+`cd cricket-sports-analytics`
 
 ### 2. Create and activate a virtual environment
 
 For example:
 
-```bash
-python -m venv venv
-source venv/bin/activate
-```
+`python -m venv venv`
+
+`source venv/bin/activate`
 
 On Windows:
 
-```bash
-venv\Scripts\activate
-```
+`venv\Scripts\activate`
 
 ### 3. Install dependencies
 
-```bash
-pip install -r requirements.txt
-```
+`pip install -r requirements.txt`
 
 ---
 
@@ -454,15 +493,11 @@ pip install -r requirements.txt
 
 Create the database tables:
 
-```bash
-python -m database.init_db
-```
+`python -m database.init_db`
 
 Populate the database with development data:
 
-```bash
-python -m database.seed
-```
+`python -m database.seed`
 
 ---
 
@@ -470,9 +505,7 @@ python -m database.seed
 
 Start the Streamlit dashboard:
 
-```bash
-streamlit run app.py
-```
+`streamlit run app.py`
 
 The application will open in your browser.
 
@@ -484,12 +517,16 @@ The main dashboard provides an executive-level overview of the cricket team.
 
 It includes:
 
+* Squad overview
 * Player performance comparison
 * Performance vs data confidence
-* Average training workload
+* Training workload analysis
+* Workload vs player performance
 * Player availability
 * Match result distribution
 * Player performance summary
+* Player consistency analysis
+* System status
 
 Additional pages provide detailed views for:
 
@@ -505,49 +542,119 @@ Additional pages provide detailed views for:
 
 The current development dataset contains:
 
-```text
-Teams:       2
-Players:     8
-Matches:     5
-Batting:    10
-Bowling:     6
-Training:    5
-Injuries:    2
-Equipment:   4
-```
+Teams: 2
+Players: 8
+Matches: 5
+Batting: 10
+Bowling: 6
+Training: 5
+Injuries: 2
+Equipment: 4
 
 The data is controlled seed data used for development, testing, and dashboard demonstration.
+
+The current dataset is intentionally limited and is not intended to represent a complete real-world cricket dataset.
+
+---
+
+## 🚀 Version 2 — In Progress
+
+Version 1 establishes the core database, analytics engine, operational modules, dashboard, and testing framework.
+
+Development is continuing with Version 2 to expand the platform into a more advanced cricket intelligence system.
+
+### 📚 Historical Cricket Data
+
+Version 2 development includes work toward:
+
+* Integration of larger historical cricket datasets
+* Processing of ball-by-ball cricket data
+* Expansion beyond controlled development data
+* Historical player and match analysis
+
+### 📊 Advanced Cricket Analytics
+
+Planned and ongoing areas include:
+
+* Phase-wise batting analysis
+* Phase-wise bowling analysis
+* Batter-bowler matchup analysis
+* Venue-based performance
+* Opponent-specific performance
+* Player form analysis
+* Advanced player comparison
+* Team-level performance trends
+
+### 🧮 Feature Engineering
+
+Development of cricket-specific features from historical match data, including factors such as:
+
+* Runs required
+* Balls remaining
+* Wickets remaining
+* Current run rate
+* Required run rate
+* Batting and bowling phases
+* Match situation
+* Player and team performance indicators
+
+### 🤖 Machine Learning
+
+The Version 2 architecture will support investigation of machine learning applications such as:
+
+* Player performance prediction
+* Match situation analysis
+* Win-probability estimation
+* Player form analysis
+* Workload-performance relationships
+
+### 🏏 Cricket Win-Probability & Match Analytics
+
+A continuing Version 2 direction is the development of a cricket match analytics engine capable of using the current match state to estimate the chasing team's win probability.
+
+Potential inputs include:
+
+Runs Required
++
+Balls Remaining
++
+Wickets in Hand
++
+Venue
++
+Match Context
+
+The system will also expose the underlying cricket statistics and features used by the model.
 
 ---
 
 ## 🔮 Future Enhancements
 
-Potential future improvements include:
+Beyond the current Version 2 development direction, potential future improvements include:
 
 ### Advanced Analytics
 
-* Player performance trends over time
-* Phase-wise batting and bowling analysis
-* Venue-based performance
-* Opponent-specific performance
-* Player comparison tools
-* Team-level performance trends
+* Real-time match analytics
+* Advanced player comparison
+* Team strategy analysis
+* Venue-specific tactical insights
+* Opponent-specific tactical analysis
+* Automated performance reports
 
 ### Machine Learning
 
-A future ML layer could use historical player and match data to investigate:
-
-* Performance prediction
-* Player workload and performance relationships
-* Injury-risk indicators
-* Match performance prediction
-* Player form analysis
+* Advanced player performance models
+* Match outcome modelling
+* Player workload modelling
+* Injury-risk modelling
+* Dynamic player form estimation
 
 ### Database
 
 * PostgreSQL support
 * Production database deployment
 * Larger historical datasets
+* Scalable data pipelines
 
 ### Application
 
@@ -557,14 +664,15 @@ A future ML layer could use historical player and match data to investigate:
 * Advanced filtering
 * Automated reporting
 * Cloud deployment
+* Real-time data integration
 
 ---
 
 ## 📌 Project Status
 
-**Current status: Active Development**
+### Version 1 — Completed ✅
 
-Completed:
+The following components have been implemented and tested:
 
 * [x] Database architecture
 * [x] SQLAlchemy models
@@ -576,21 +684,39 @@ Completed:
 * [x] Match analytics
 * [x] Equipment analytics
 * [x] Player performance scoring
+* [x] Data confidence
+* [x] Batting consistency analysis
+* [x] Bowling consistency analysis
 * [x] Player profile integration
 * [x] Streamlit dashboard
 * [x] Streamlit analytics pages
 * [x] Automated testing
-* [x] 30/30 tests passing
+* [x] 36/36 tests passing
 * [x] Git version control
 * [x] GitHub repository
+
+### Version 2 — In Progress 🚧
+
+* [ ] Larger historical cricket datasets
+* [ ] Ball-by-ball data processing
+* [ ] Advanced cricket feature engineering
+* [ ] Advanced player analytics
+* [ ] Expanded match analytics
+* [ ] Cricket win-probability modelling
+* [ ] Machine learning experimentation
+* [ ] Advanced visualizations
+* [ ] Expanded cricket intelligence features
+
+Version 2 is being developed on top of the existing Version 1 database, analytics, and dashboard architecture.
 
 ---
 
 ## 👩‍💻 Author
 
-**Banavi**
+Banavi
 
 GitHub:
+
 [https://github.com/banavii](https://github.com/banavii)
 
 ---

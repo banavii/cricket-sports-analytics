@@ -1,9 +1,14 @@
-from analytics.batting import get_batting_statistics
-from analytics.bowling import get_bowling_statistics
-from analytics.training import (
-    get_training_statistics,
-    get_training_status,
+from analytics.batting import (
+    get_batting_statistics,
+    get_batting_consistency,
 )
+
+from analytics.bowling import (
+    get_bowling_statistics,
+    get_bowling_consistency,
+)
+
+from analytics.training import get_training_statistics
 
 from database.connection import SessionLocal
 from database.models import Player
@@ -86,10 +91,7 @@ def calculate_data_confidence(
             / 2
         )
 
-        return round(
-            combined * 100,
-            2,
-        )
+        return round(combined * 100, 2)
 
     return 25
 
@@ -128,7 +130,6 @@ def calculate_performance_scores():
     session = SessionLocal()
 
     try:
-
         players = session.query(Player).all()
 
         player_roles = {
@@ -142,7 +143,6 @@ def calculate_performance_scores():
         }
 
     finally:
-
         session.close()
 
     results = []
@@ -150,6 +150,18 @@ def calculate_performance_scores():
     for player_id in player_roles:
 
         role = player_roles[player_id]
+
+        # --------------------------------------------------
+        # CONSISTENCY METRICS
+        # --------------------------------------------------
+
+        batting_consistency = get_batting_consistency(
+            player_id
+        )
+
+        bowling_consistency = get_bowling_consistency(
+            player_id
+        )
 
         batting_stats = batting.get(
             player_id,
@@ -368,49 +380,70 @@ def calculate_performance_scores():
         # --------------------------------------------------
 
         if confidence >= 75:
-
             confidence_label = "High"
 
         elif confidence >= 50:
-
             confidence_label = "Medium"
 
         else:
-
             confidence_label = "Low"
+
+        # --------------------------------------------------
+        # FINAL RESULT
+        # --------------------------------------------------
 
         results.append(
             {
                 "player_id": player_id,
                 "player_name": player_names[player_id],
                 "role": role,
+
                 "batting_score": round(
                     batting_score,
                     2,
                 ),
+
                 "bowling_score": round(
                     bowling_score,
                     2,
                 ),
+
                 "training_score": round(
                     training_score,
                     2,
                 ),
+
                 "performance_score": round(
                     performance_score,
                     2,
                 ),
+
                 "data_confidence": confidence,
+
                 "confidence_label": confidence_label,
+
                 "batting_matches": batting_matches,
+
                 "bowling_matches": bowling_matches,
+
                 "training_sessions": training_sessions,
+
+                # New consistency metrics
+                "batting_consistency": (
+                    batting_consistency[
+                        "consistency_score"
+                    ]
+                ),
+
+                "bowling_consistency": (
+                    bowling_consistency[
+                        "consistency_score"
+                    ]
+                ),
             }
         )
 
-    # --------------------------------------------------
-    # SORT BY PERFORMANCE
-    # --------------------------------------------------
+    # Sort by performance score
 
     results.sort(
         key=lambda player: player["performance_score"],
@@ -419,103 +452,149 @@ def calculate_performance_scores():
 
     return results
 
-
 def get_workload_vs_performance():
     """
-    Combine training workload data with player performance
-    scores and workload status.
+    Compare training workload with player performance.
 
     Returns:
-        list[dict]: Workload and performance information
-        for each player.
+        list[dict]: Workload and performance information.
     """
 
-    training_data = get_training_statistics()
+    training_statistics = get_training_statistics()
 
-    training_status_data = get_training_status()
+    performance_scores = (
+        calculate_performance_scores()
+    )
 
-    performance_data = calculate_performance_scores()
+    # Create lookup dictionaries
 
-    training = {
+    training_by_player = {
         player["player_id"]: player
-        for player in training_data
+        for player in training_statistics
     }
 
-    training_status = {
+    performance_by_player = {
         player["player_id"]: player
-        for player in training_status_data
+        for player in performance_scores
     }
 
     results = []
 
-    for player in performance_data:
+    for player_id in performance_by_player:
 
-        player_id = player["player_id"]
+        performance = performance_by_player[player_id]
 
-        training_stats = training.get(
+        training = training_by_player.get(
             player_id,
             {},
         )
 
-        status_stats = training_status.get(
-            player_id,
-            {},
+        # Determine workload status
+
+        average_workload = training.get(
+            "average_workload",
+            0,
         )
+
+        all_workloads = [
+            player.get("average_workload", 0)
+            for player in training_statistics
+        ]
+
+        if all_workloads:
+
+            overall_average = (
+                sum(all_workloads)
+                / len(all_workloads)
+            )
+
+        else:
+
+            overall_average = 0
+
+        if overall_average > 0:
+
+            if average_workload >= (
+                overall_average * 1.15
+            ):
+
+                workload_status = "High"
+
+            elif average_workload <= (
+                overall_average * 0.85
+            ):
+
+                workload_status = "Low"
+
+            else:
+
+                workload_status = "Moderate"
+
+        else:
+
+            workload_status = "Unknown"
 
         results.append(
             {
                 "player_id": player_id,
-                "player_name": player["player_name"],
-                "role": player["role"],
 
-                "average_workload": training_stats.get(
-                    "average_workload",
-                    0,
+                "player_name": performance.get(
+                    "player_name"
                 ),
 
-                "average_fitness": training_stats.get(
+                "role": performance.get(
+                    "role"
+                ),
+
+                "average_workload": average_workload,
+
+                "average_fitness": training.get(
                     "average_fitness",
                     0,
                 ),
 
-                "attendance_percentage": training_stats.get(
+                "attendance_percentage": training.get(
                     "attendance_percentage",
                     0,
                 ),
 
-                "workload_status": status_stats.get(
-                    "workload_status",
-                    "Unknown",
+                "workload_status": workload_status,
+
+                "performance_score": performance.get(
+                    "performance_score",
+                    0,
                 ),
 
-                "performance_score": player[
-                    "performance_score"
-                ],
+                "data_confidence": performance.get(
+                    "data_confidence",
+                    0,
+                ),
 
-                "data_confidence": player[
-                    "data_confidence"
-                ],
+                "confidence_label": performance.get(
+                    "confidence_label",
+                    "Low",
+                ),
 
-                "confidence_label": player[
-                    "confidence_label"
-                ],
+                "batting_consistency": performance.get(
+                    "batting_consistency",
+                    0,
+                ),
+
+                "bowling_consistency": performance.get(
+                    "bowling_consistency",
+                    0,
+                ),
             }
         )
 
     return results
-
-
-# --------------------------------------------------
-# TEST / MANUAL EXECUTION
-# --------------------------------------------------
-
 if __name__ == "__main__":
 
     performance = calculate_performance_scores()
 
     print()
     print("PLAYER PERFORMANCE SCORES")
-    print("=" * 90)
+    print("=" * 100)
 
     for player in performance:
 
@@ -524,6 +603,8 @@ if __name__ == "__main__":
             f" Role: {player['role']:<12}"
             f" Score: {player['performance_score']:>6.2f}"
             f" Confidence: {player['confidence_label']:<7}"
+            f" Bat Consistency: {player['batting_consistency']:>6.2f}"
+            f" Bowl Consistency: {player['bowling_consistency']:>6.2f}"
         )
 
-    print("=" * 90)
+    print("=" * 100)

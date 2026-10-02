@@ -52,3 +52,16 @@ def test_aarav_sharma_performance():
     assert aarav["performance_score"] == 87.38
     assert aarav["data_confidence"] == 100
     assert aarav["confidence_label"] == "High"
+def test_performance_includes_consistency_metrics():
+    from analytics.performance import calculate_performance_scores
+
+    results = calculate_performance_scores()
+
+    assert len(results) > 0
+
+    for player in results:
+        assert "batting_consistency" in player
+        assert "bowling_consistency" in player
+
+        assert 0 <= player["batting_consistency"] <= 100
+        assert 0 <= player["bowling_consistency"] <= 100    

@@ -1,11 +1,21 @@
 import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
 
 from database.connection import SessionLocal
 from database.models import Player, Team
 
 from analytics.player_profile import get_player_profile
-from analytics.batting import get_batting_trend
-from analytics.bowling import get_bowling_trend
+
+from analytics.batting import (
+    get_batting_trend,
+    get_batting_consistency,
+)
+
+from analytics.bowling import (
+    get_bowling_trend,
+    get_bowling_consistency,
+)
 
 
 st.set_page_config(
@@ -18,6 +28,7 @@ st.set_page_config(
 # --------------------------------------------------
 # DATABASE HELPERS
 # --------------------------------------------------
+
 
 def get_players():
     """Retrieve all players from the database."""
@@ -101,7 +112,10 @@ with col1:
     )
 
 
-# Filter players by team
+# --------------------------------------------------
+# FILTER PLAYERS BY TEAM
+# --------------------------------------------------
+
 if selected_team == "All Teams":
 
     filtered_players = players
@@ -128,6 +142,14 @@ with col2:
         for player in filtered_players
     }
 
+    if not player_options:
+
+        st.warning(
+            "No players available for the selected team."
+        )
+
+        st.stop()
+
     selected_player_name = st.selectbox(
         "Select Player",
         list(player_options.keys()),
@@ -146,6 +168,7 @@ selected_player_id = player_options[
 profile = get_player_profile(
     selected_player_id
 )
+
 
 if profile is None:
 
@@ -266,6 +289,7 @@ st.subheader("Player Information")
 
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
 
     st.write(
@@ -310,29 +334,34 @@ st.divider()
 
 st.subheader("🏏 Batting Performance")
 
+
 if batting:
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
+
         st.metric(
             "Matches",
             batting["matches"],
         )
 
     with col2:
+
         st.metric(
             "Runs",
             batting["total_runs"],
         )
 
     with col3:
+
         st.metric(
             "Average",
             f"{batting['batting_average']:.2f}",
         )
 
     with col4:
+
         st.metric(
             "Strike Rate",
             f"{batting['strike_rate']:.2f}",
@@ -340,7 +369,9 @@ if batting:
 
 else:
 
-    st.info("No batting data available.")
+    st.info(
+        "No batting data available."
+    )
 
 
 # --------------------------------------------------
@@ -349,29 +380,34 @@ else:
 
 st.subheader("🎯 Bowling Performance")
 
+
 if bowling:
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
+
         st.metric(
             "Matches",
             bowling["matches"],
         )
 
     with col2:
+
         st.metric(
             "Wickets",
             bowling["wickets"],
         )
 
     with col3:
+
         st.metric(
             "Economy",
             f"{bowling['economy_rate']:.2f}",
         )
 
     with col4:
+
         st.metric(
             "Bowling SR",
             f"{bowling['bowling_strike_rate']:.2f}",
@@ -379,7 +415,70 @@ if bowling:
 
 else:
 
-    st.info("No bowling data available.")
+    st.info(
+        "No bowling data available."
+    )
+
+
+# --------------------------------------------------
+# CONSISTENCY ANALYSIS
+# --------------------------------------------------
+
+st.divider()
+
+st.subheader("📊 Performance Consistency")
+
+batting_consistency = get_batting_consistency(
+    selected_player_id
+)
+
+bowling_consistency = get_bowling_consistency(
+    selected_player_id
+)
+
+
+col1, col2, col3 = st.columns(3)
+
+
+with col1:
+
+    st.metric(
+        "Batting Consistency",
+        f"{batting_consistency['consistency_score']:.2f}",
+    )
+
+
+with col2:
+
+    st.metric(
+        "Bowling Consistency",
+        f"{bowling_consistency['consistency_score']:.2f}",
+    )
+
+
+with col3:
+
+    if performance:
+
+        st.metric(
+            "Data Confidence",
+            f"{performance['data_confidence']:.1f}%",
+        )
+
+    else:
+
+        st.metric(
+            "Data Confidence",
+            "N/A",
+        )
+
+
+st.caption(
+    "Consistency measures match-to-match variation. "
+    "A consistency score is calculated only when "
+    "at least two performances are available."
+)
+
 
 # --------------------------------------------------
 # PERFORMANCE TRENDS
@@ -402,10 +501,9 @@ if batting:
 
     if batting_trend:
 
-        st.markdown("### 🏏 Batting Trend")
-
-        import pandas as pd
-        import plotly.graph_objects as go
+        st.markdown(
+            "### 🏏 Batting Trend"
+        )
 
         batting_df = pd.DataFrame(
             batting_trend
@@ -471,7 +569,9 @@ if bowling:
 
     if bowling_trend:
 
-        st.markdown("### 🎯 Bowling Trend")
+        st.markdown(
+            "### 🎯 Bowling Trend"
+        )
 
         bowling_df = pd.DataFrame(
             bowling_trend
@@ -522,35 +622,42 @@ if bowling:
         st.info(
             "No bowling trend data available."
         )
+
+
 # --------------------------------------------------
 # TRAINING
 # --------------------------------------------------
 
 st.subheader("🏋️ Training & Fitness")
 
+
 if training:
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
+
         st.metric(
             "Attendance",
             f"{training['attendance_percentage']:.1f}%",
         )
 
     with col2:
+
         st.metric(
             "Sessions",
             training["total_sessions"],
         )
 
     with col3:
+
         st.metric(
             "Avg Workload",
             f"{training['average_workload']:.1f}",
         )
 
     with col4:
+
         st.metric(
             "Avg Fitness",
             f"{training['average_fitness']:.1f}",
@@ -558,7 +665,9 @@ if training:
 
 else:
 
-    st.info("No training data available.")
+    st.info(
+        "No training data available."
+    )
 
 
 # --------------------------------------------------
@@ -567,29 +676,34 @@ else:
 
 st.subheader("🩹 Injury & Availability")
 
+
 if injury:
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
+
         st.metric(
             "Total Injuries",
             injury["total_injuries"],
         )
 
     with col2:
+
         st.metric(
             "Recovered",
             injury["recovered_injuries"],
         )
 
     with col3:
+
         st.metric(
             "Recovering",
             injury["recovering_injuries"],
         )
 
     with col4:
+
         st.metric(
             "Avg Recovery",
             f"{injury['average_recovery_days']:.1f} days",
@@ -597,7 +711,9 @@ if injury:
 
     if injury["availability_status"] == "Available":
 
-        st.success("Player is currently available.")
+        st.success(
+            "Player is currently available."
+        )
 
     else:
 
@@ -607,10 +723,13 @@ if injury:
 
 else:
 
-    st.success("No injury records found.")
+    st.success(
+        "No injury records found."
+    )
 
 
 st.divider()
+
 
 st.caption(
     "Cricket Sports Performance & Operations Intelligence Platform"
